@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import List, Optional
 
 from dateutil.relativedelta import relativedelta
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, root_validator
 
 
 class AccountBase(BaseModel):
@@ -40,7 +40,8 @@ class Account(AccountBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
 
 class ContactBase(BaseModel):
@@ -73,7 +74,8 @@ class Contact(ContactBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
 
 class LocationBase(BaseModel):
@@ -109,7 +111,8 @@ class Location(LocationBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
 
 class MachineBase(BaseModel):
@@ -131,14 +134,17 @@ class MachineBase(BaseModel):
     sync_hash: Optional[str] = None
     manual_override_fields: Optional[str] = None
 
-    @model_validator(mode="after")
-    def compute_warranty_end_date(self):
-        if not self.warranty_end_date and self.installation_date and self.warranty_months is not None:
-            self.warranty_end_date = self.installation_date + relativedelta(months=int(self.warranty_months))
-        if self.installation_date and self.warranty_end_date:
-            if self.warranty_end_date < self.installation_date:
+    @root_validator
+    def compute_warranty_end_date(cls, values):
+        installation_date = values.get("installation_date")
+        warranty_months = values.get("warranty_months")
+        warranty_end_date = values.get("warranty_end_date")
+        if not warranty_end_date and installation_date and warranty_months is not None:
+            values["warranty_end_date"] = installation_date + relativedelta(months=int(warranty_months))
+        if installation_date and values.get("warranty_end_date"):
+            if values["warranty_end_date"] < installation_date:
                 raise ValueError("warranty_end_date must be >= installation_date")
-        return self
+        return values
 
 
 class MachineCreate(MachineBase):
@@ -156,7 +162,8 @@ class Machine(MachineBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
 
 class AlertRuleBase(BaseModel):
@@ -182,7 +189,8 @@ class AlertRule(AlertRuleBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
 
 class AlertBase(BaseModel):
@@ -205,7 +213,8 @@ class Alert(AlertBase):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        orm_mode = True
 
 
 class AlertGenerationResult(BaseModel):
