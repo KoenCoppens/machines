@@ -15,13 +15,17 @@ services:
       timeout: 5s
       retries: 10
   backend:
-    build: ./backend
     environment:
-      DATABASE_URL: "mssql+pyodbc://sa:${SA_PASSWORD}@sqlserver:1433/machinemgmt?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+      DATABASE_URL: ${DATABASE_URL}
+      SA_PASSWORD: ${SA_PASSWORD}
+      DB_SERVER: sqlserver
+      DB_NAME: machinemgmt
+      DATABASE_URL: "mssql+pyodbc://sa@sqlserver:1433/machinemgmt?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
     ports:
       - "8000:8000"
     depends_on:
       - sqlserver
+
 
   frontend:
     build: ./frontend
